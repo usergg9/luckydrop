@@ -1,6 +1,6 @@
 
 //////////////////////////////
-// 1. CONEXIÓN A SUPABASE
+// SUPABASE
 //////////////////////////////
 
 const SUPABASE_URL = "https://ybsrkghhgurjgrfukgox.supabase.co/rest/v1/
@@ -11,14 +11,53 @@ const { createClient } = supabase;
 const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 //////////////////////////////
-// 2. ELEMENTOS DE LA WEB
+// ELEMENTOS
 //////////////////////////////
+
+const email = document.getElementById("email");
+const password = document.getElementById("password");
+
+const registerBtn = document.getElementById("registerBtn");
+const loginBtn = document.getElementById("loginBtn");
 
 const btn = document.getElementById("scratchBtn");
 const result = document.getElementById("result");
 
+let user = null;
+
 //////////////////////////////
-// 3. PREMIOS (PROBABILIDADES)
+// LOGIN
+//////////////////////////////
+
+registerBtn.addEventListener("click", async () => {
+  const { data, error } = await client.auth.signUp({
+    email: email.value,
+    password: password.value
+  });
+
+  if (error) {
+    result.textContent = "❌ " + error.message;
+  } else {
+    result.textContent = "✅ Usuario creado. Revisa tu email si lo pide.";
+  }
+});
+
+loginBtn.addEventListener("click", async () => {
+  const { data, error } = await client.auth.signInWithPassword({
+    email: email.value,
+    password: password.value
+  });
+
+  if (error) {
+    result.textContent = "❌ " + error.message;
+  } else {
+    user = data.user;
+    result.textContent = "🔥 Sesión iniciada";
+  }
+});
+
+//////////////////////////////
+// RASCA
 //////////////////////////////
 
 const rewards = [
@@ -28,109 +67,22 @@ const rewards = [
   { name: "👑 LEGENDARIO", chance: 5 }
 ];
 
-//////////////////////////////
-// 4. USUARIO ACTUAL
-//////////////////////////////
-
-let user = null;
-
-//////////////////////////////
-// 5. LOGIN AUTOMÁTICO (SI EXISTE SESIÓN)
-//////////////////////////////
-
-async function getUser() {
-  const { data } = await client.auth.getUser();
-  user = data.user;
-}
-
-getUser();
-
-//////////////////////////////
-// 6. FUNCIONES LOGIN
-//////////////////////////////
-
-async function register(email, password) {
-  const { data, error } = await client.auth.signUp({
-    email,
-    password
-  });
-
-  return { data, error };
-}
-
-async function login(email, password) {
-  const { data, error } = await client.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  user = data.user;
-
-  return { data, error };
-}
-
-async function logout() {
-  await client.auth.signOut();
-  user = null;
-}
-
-//////////////////////////////
-// 7. RASCA DIARIO (PROBABILIDAD)
-//////////////////////////////
-
 function obtenerPremio() {
   const rand = Math.random() * 100;
-  let acumulado = 0;
+  let acc = 0;
 
   for (let r of rewards) {
-    acumulado += r.chance;
-    if (rand <= acumulado) return r.name;
+    acc += r.chance;
+    if (rand <= acc) return r.name;
   }
 }
 
-//////////////////////////////
-// 8. GUARDAR PREMIO EN SUPABASE
-//////////////////////////////
-
-async function guardarPremio(premio) {
-  if (!user) {
-    result.textContent = "⚠️ Tienes que iniciar sesión";
-    return;
-  }
-
-  const { data, error } = await client
-    .from("rewards")
-    .insert([
-      {
-        user_id: user.id,
-        reward_name: premio
-      }
-    ]);
-
-  return { data, error };
-}
-
-//////////////////////////////
-// 9. CLICK DEL BOTÓN
-//////////////////////////////
-
-btn.addEventListener("click", async () => {
-
+btn.addEventListener("click", () => {
   if (!user) {
     result.textContent = "⚠️ Inicia sesión primero";
     return;
   }
 
-  result.textContent = "🎟️ Rascando...";
-
-  setTimeout(async () => {
-
-    const premio = obtenerPremio();
-
-    result.textContent = "🎉 Te ha tocado: " + premio;
-
-    await guardarPremio(premio);
-
-  }, 1500);
-
+  const premio = obtenerPremio();
+  result.textContent = "🎉 Te ha tocado: " + premio;
 });
