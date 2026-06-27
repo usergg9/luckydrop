@@ -8,7 +8,9 @@ const SUPABASE_URL = "https://ybsrkghhgurjgrfukgox.supabase.co/rest/v1/
 const SUPABASE_KEY = "sb_publishable_gxjNTA6NmdNdyt46l11XBg_3NlCFRrX";
 
 const { createClient } = supabase;
-const client = createClient(SUPABASE_URL, SUPABASE_KEY);
+const client = createClient(https://ybsrkghhgurjgrfukgox.supabase.co/rest/v1/
+
+,sb_publishable_gxjNTA6NmdNdyt46l11XBg_3NlCFRrX);
 
 //////////////////////////////
 // ELEMENTOS
